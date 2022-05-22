@@ -12,11 +12,13 @@ while True:
     faces = face_cascade.detectMultiScale(gray, 1.1, 4)
     for (x, y, w, h) in faces:
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
+        
+        cv2.rectangle(frame, (x-1, y), (x+w+1, y-20), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_SIMPLEX
         name = "unknown"
         color = (255, 255, 255)
         stroke = 2
-        cv2.putText(frame, name, (x, y), font, 1, color, stroke, cv2.LINE_AA)
+        cv2.putText(frame, name, (x, y-3), font, 0.7, color, stroke, cv2.LINE_AA)
 
         eye_faces = eye_cascade.detectMultiScale(gray, 1.1, 4)
         for (px, py, pw, ph) in eye_faces:
