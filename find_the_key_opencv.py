@@ -1,5 +1,5 @@
 import cv2
-img = cv2.imread('arnold.jpg')
+img = cv2.imread('img/arnold.jpg')
 while(1):
     cv2.imshow('img',img)
     k = cv2.waitKey(33)
