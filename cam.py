@@ -114,7 +114,7 @@ face_encodings = []
 face_names = []
 process_this_frame = True
 
-while True:
+while program_running:
     ret, frame = cap.read()
     if not cap.isOpened():
         print('Unable to load camera.')
@@ -125,30 +125,49 @@ while True:
         print("Failed to grab frame.")
         break
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+    rgb_small_frame = small_frame[:, :, ::-1]
 
-    # Arcok detektálása egy megadott méretben, egy koordinátát fog eltárolni a helyzetéről
-    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+    if process_this_frame:
+        face_locations = face_recognition.face_locations(rgb_small_frame)
+        face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
-    for (x, y, w, h) in faces:
+        face_names = []
+        for face_encodings in face_encodings:
+            matches = face_recognition.compare_faces(known_face_encodings, face_encodings, tolerance=0.8)
+            name = "Unknown"
+            face_distances = face_recognition.face_distance(known_face_encodings, face_encodings)
+            best_match_index = np.argmin(face_distances)
+            if matches[best_match_index]:
+                name = known_face_names[best_match_index]
+            face_names.append(name)
+
+    process_this_frame = not process_this_frame
+    # print("Face detected -- {}".format(face_names))
+
+    for (top, right, bottom, left), name in zip(face_locations, face_names):
+        top *= 4
+        right *= 4
+        bottom *= 4
+        left *= 4
+
         # Az arc köré rajzol egy üres négyzetet
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
+        cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
 
         # Az arc fölé rajzol egy teli téglalapot
-        cv2.rectangle(frame, (x-1, y), (x+w+1, y-20), (0, 0, 255), cv2.FILLED)
+        cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
 
         # A téglalapba helyez a megadott adatok alapján egy nevet
         font = cv2.FONT_HERSHEY_SIMPLEX
-        name = "unknown"
         color = (255, 255, 255)
         stroke = 2
-        cv2.putText(frame, name, (x, y-3), font, 0.7, color, stroke, cv2.LINE_AA)
+        cv2.putText(frame, name, (left + 6, bottom - 6), font, 0.6, color, stroke)
 
-        # A szemek detektálása egy megadott méretben
-        eye_faces = eye_cascade.detectMultiScale(gray, 1.1, 4)
-        for (px, py, pw, ph) in eye_faces:
-            #A szemek köré rajzol egy-egy üres négyzetet
-            cv2.rectangle(frame, (px, py), (px+pw, py+ph), (255, 0, 0), 2)
+        # # A szemek detektálása egy megadott méretben
+        # eye_faces = eye_cascade.detectMultiScale(rgb_small_frame, 1.1, 4)
+        # for (px, py, pw, ph) in eye_faces:
+        #     #A szemek köré rajzol egy-egy üres négyzetet
+        #     cv2.rectangle(frame, (px, py), (px+pw, py+ph), (255, 0, 0), 2)
 
     # Kivetíti azt, amit a webkamera lát pillanatképenként, így olyan lesz mint egy elő videófelvétel
     cv2.imshow('Face recognition', frame)
@@ -156,27 +175,13 @@ while True:
     # A program folyamatosan fut
     key = cv2.waitKey(30)
 
-    # A SPACE megnyomásával készít egy képet, majd megjeleníti és elmenti azt
-    if key == 32:
-        if img_counter != 5:
-            check, frame = cap.read()
-            cv2.imwrite(filename=f'saved_img_{img_counter}.jpg', img=frame)
-            cap.release()
-            cv2.imshow("Captured image", frame)
-            cv2.waitKey(2000)
-            print("Image saved.")
-            img_counter += 1
-            cv2.destroyWindow('Captured image')
-            cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
-            pass
-        else:
-            print("The maximum number of images is 5.")
-
     # Leállítja a webkamerát és bezárja az ablakot, ha az ESC billentyű(27) lenyomódott
-    elif key == 27:
-        print("Turning off camera.")
+    if key == 27:
+        print("\nTurning off camera.")
+        sleep(1)
         cap.release()
         print("Camera off.")
+        sleep(1)
         print("Program ended.")
         break
 
