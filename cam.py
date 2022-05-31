@@ -1,18 +1,119 @@
+import face_recognition
 import cv2
+import numpy as np
 from time import sleep
+import os
 
-# Cascade-ok útjának megadása
-face_path = 'haarcascade/haarcascade_frontalface_default.xml'
-eye_path = 'haarcascade/haarcascade_eye.xml'
-
-# Útvonalak változóba tárolása
-face_cascade = cv2.CascadeClassifier(face_path)
-eye_cascade = cv2.CascadeClassifier(eye_path)
+# ====================Cascade Verzió==============================
+# Cascade-ok útjának megadása                                   #
+# face_path = 'haarcascade/haarcascade_frontalface_default.xml'  #
+# eye_path = 'haarcascade/haarcascade_eye.xml'                   #
+#
+# Útvonalak változóba tárolása                                  #
+# face_cascade = cv2.CascadeClassifier(face_path)                #
+# eye_cascade = cv2.CascadeClassifier(eye_path)                  #
+# ================================================================
 
 # A webkamera beolvasása (0 vagy 1, előlapi vagy hátlapi; mikor hogy működik???)
-cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)  # hibakód elhárításáért kell a 2. paraméter
 
 img_counter = 0
+known_face_names = []
+take_picture = True
+program_running = False
+
+with open('known_names.txt', 'r', encoding='utf-8') as f:
+    known_face_names = f.read().splitlines()
+
+print("The names currently stored: ", end="")
+if known_face_names:
+    print(', '.join(known_face_names))
+else:
+    print("{empty}")
+print("")
+
+# Töröl minden ezelőtti képet vagy folytatja tovább a programot törlés nélkül
+delete_pics = input("Do you want to take new pictures and delete the previous ones (if they exist)? (y/n): ")
+if delete_pics == "y":
+    try:
+        for i in range(5):
+            os.remove(f'saved_img_{i}.jpg')
+            print(f'saved_img_{i} is removed.')
+            known_face_names.clear()
+            with open('known_names.txt', 'w') as f:
+                pass
+    except:
+        pass
+else:
+    pass
+
+for i in range(5):
+    if os.path.isfile(f'saved_img_{i}.jpg'):
+        img_counter = i+1
+
+print("")
+while take_picture:
+    ret, frame = cap.read()
+    cv2.imshow("Picture taker", frame)
+
+    key = cv2.waitKey(30)
+    if key == 32:
+        if img_counter != 5:
+            check, frame = cap.read()
+            name = input("Enter who is in the picture: ")
+            if name in known_face_names:
+                pass
+            else:
+                known_face_names.append(name)
+                with open('known_names.txt', 'a', encoding='utf-8') as f:
+                    f.write(f'{name}\n')
+
+            cv2.imwrite(filename=f'saved_img_{img_counter}.jpg', img=frame)
+            cap.release()
+            cv2.imshow("Captured image", frame)
+            cv2.waitKey(2000)
+            print("Image saved.")
+            img_counter += 1
+            cv2.destroyWindow('Captured image')
+            cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+            pass
+        else:
+            print("The maximum number of images is 5.")
+            print("Program is closing.")
+            sleep(5)
+            cv2.destroyWindow("Picture taker")
+            take_picture = False
+            program_running = True
+
+    elif key == 27:
+        try:
+            path1 = face_recognition.load_image_file('saved_img_0.jpg')
+        except FileNotFoundError:
+            print("There are no pictures.")
+            continue
+        print("\nProgram is closing.")
+        sleep(1)
+        cv2.destroyWindow("Picture taker")
+        take_picture = False
+        print("Face recognition is starting.")
+        program_running = True
+
+image1 = face_recognition.load_image_file('saved_img_0.jpg')
+image1_face_encoding = face_recognition.face_encodings(image1)[0]
+
+image2 = face_recognition.load_image_file('img/arnold2.jpg')
+image2_face_encoding = face_recognition.face_encodings(image2)[0]
+
+known_face_encodings = [
+    image1_face_encoding,
+    image2_face_encoding
+]
+
+face_locations = []
+face_encodings = []
+face_names = []
+process_this_frame = True
+
 while True:
     ret, frame = cap.read()
     if not cap.isOpened():
