@@ -91,6 +91,11 @@ while take_picture:
         except FileNotFoundError:
             print("There are no pictures.")
             continue
+        try:
+            path2 = face_recognition.load_image_file('saved_img_1.jpg')
+        except FileNotFoundError:
+            print("2 pictures required.")
+            continue
         print("\nProgram is closing.")
         sleep(1)
         cv2.destroyWindow("Picture taker")
@@ -101,7 +106,7 @@ while take_picture:
 image1 = face_recognition.load_image_file('saved_img_0.jpg')
 image1_face_encoding = face_recognition.face_encodings(image1)[0]
 
-image2 = face_recognition.load_image_file('img/arnold2.jpg')
+image2 = face_recognition.load_image_file('saved_img_1.jpg')
 image2_face_encoding = face_recognition.face_encodings(image2)[0]
 
 known_face_encodings = [
