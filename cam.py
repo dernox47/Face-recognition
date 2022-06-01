@@ -91,11 +91,6 @@ while take_picture:
         except FileNotFoundError:
             print("There are no pictures.")
             continue
-        try:
-            path2 = face_recognition.load_image_file('saved_img_1.jpg')
-        except FileNotFoundError:
-            print("2 pictures required.")
-            continue
         print("\nProgram is closing.")
         sleep(1)
         cv2.destroyWindow("Picture taker")
@@ -103,16 +98,49 @@ while take_picture:
         print("Face recognition is starting.")
         program_running = True
 
+image2 = None
+image3 = None
+image4 = None
+image5 = None
+
+image2_face_encoding = None
+image3_face_encoding = None
+image4_face_encoding = None
+image5_face_encoding = None
+
 image1 = face_recognition.load_image_file('saved_img_0.jpg')
 image1_face_encoding = face_recognition.face_encodings(image1)[0]
 
-image2 = face_recognition.load_image_file('saved_img_1.jpg')
-image2_face_encoding = face_recognition.face_encodings(image2)[0]
-
 known_face_encodings = [
-    image1_face_encoding,
-    image2_face_encoding
+    image1_face_encoding
 ]
+
+try:
+    image2 = face_recognition.load_image_file('saved_img_1.jpg')
+    image2_face_encoding = face_recognition.face_encodings(image2)[0]
+    known_face_encodings.append(image2_face_encoding)
+except FileNotFoundError:
+    pass
+try:
+    image3 = face_recognition.load_image_file('saved_img_2.jpg')
+    image3_face_encoding = face_recognition.face_encodings(image3)[0]
+    known_face_encodings.append(image3_face_encoding)
+except FileNotFoundError:
+    pass
+try:
+    image4 = face_recognition.load_image_file('saved_img_3.jpg')
+    image4_face_encoding = face_recognition.face_encodings(image4)[0]
+    known_face_encodings.append(image4_face_encoding)
+except FileNotFoundError:
+    pass
+try:
+    image5 = face_recognition.load_image_file('saved_img_4.jpg')
+    image5_face_encoding = face_recognition.face_encodings(image5)[0]
+    known_face_encodings.append(image5_face_encoding)
+except FileNotFoundError:
+    pass
+
+
 
 face_locations = []
 face_encodings = []
@@ -139,7 +167,7 @@ while program_running:
 
         face_names = []
         for face_encodings in face_encodings:
-            matches = face_recognition.compare_faces(known_face_encodings, face_encodings, tolerance=0.8)
+            matches = face_recognition.compare_faces(known_face_encodings, face_encodings, tolerance=0.6)
             name = "Unknown"
             face_distances = face_recognition.face_distance(known_face_encodings, face_encodings)
             best_match_index = np.argmin(face_distances)
