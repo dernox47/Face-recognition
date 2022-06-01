@@ -140,8 +140,6 @@ try:
 except FileNotFoundError:
     pass
 
-
-
 face_locations = []
 face_encodings = []
 face_names = []
